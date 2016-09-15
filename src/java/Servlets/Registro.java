@@ -12,11 +12,14 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
+import prueba.aes.AES;
 import prueba.alumno.Alumno;
 
 public class Registro extends HttpServlet {
@@ -27,7 +30,7 @@ public class Registro extends HttpServlet {
     private MongoCollection<Document> col;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, Exception {
 
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
@@ -36,14 +39,18 @@ public class Registro extends HttpServlet {
         int edad = Integer.parseInt(request.getParameter("edad"));
         String carrera = request.getParameter("carrera");
         String clave=request.getParameter("clave");
+        AES aes=new AES();
+        
+        String carrera_enc=aes.encrypt(carrera);
+        String nombre_enc=aes.encrypt(nombre);
 
         Alumno a = new Alumno();
-        a.setNombres(nombre);
+        a.setNombres(nombre_enc);
         a.setCorreo(correo);
         a.setCiclo(ciclo);
         a.setSexo(sexo);
         a.setEdad(edad);
-        a.setCarrera(carrera);
+        a.setCarrera(carrera_enc);
         a.setClave(clave);
         
         registrar(a);
@@ -100,7 +107,11 @@ public class Registro extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (Exception ex) {
+            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -114,7 +125,11 @@ public class Registro extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (Exception ex) {
+            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
