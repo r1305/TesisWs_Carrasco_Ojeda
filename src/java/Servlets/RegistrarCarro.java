@@ -12,17 +12,18 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
-import prueba.aes.AES;
 import prueba.alumno.Alumno;
 
-public class Registro extends HttpServlet {
+/**
+ *
+ * @author Julian
+ */
+public class RegistrarCarro extends HttpServlet {
 
     private MongoClient client;
     private final MongoClientURI clientURI = new MongoClientURI("mongodb://root:root@ds147995.mlab.com:47995/tesis_ojeda_carrasco");
@@ -30,47 +31,34 @@ public class Registro extends HttpServlet {
     private MongoCollection<Document> col;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, Exception {
+            throws ServletException, IOException {
 
-        AES aes=new AES();
-        
-        String nombre = aes.encrypt(request.getParameter("nombre"));
-        String correo = aes.encrypt(request.getParameter("correo"));
-        int ciclo = Integer.parseInt(request.getParameter("ciclo"));
-        String sexo = aes.encrypt(request.getParameter("sexo"));
-        int edad =Integer.parseInt(request.getParameter("edad"));
-        String carrera = aes.encrypt(request.getParameter("carrera"));
-        String clave=aes.encrypt(request.getParameter("clave"));
-        
+        String usuario = request.getParameter("usuario");
+        String placa = request.getParameter("placa");
+        String modelo = request.getParameter("modelo");
+        String marca = request.getParameter("marca");
+        int asientos = Integer.parseInt(request.getParameter("asientos"));
+        System.out.println("*****************");
+        System.out.println(usuario+"-"+placa+"-"+modelo+"-"+marca+"-"+asientos);
 
-        Alumno a = new Alumno();
-        a.setNombres(nombre);
-        a.setCorreo(correo);
-        a.setCiclo(ciclo);
-        a.setSexo(sexo);
-        a.setEdad(edad);
-        a.setCarrera(carrera);
-        a.setClave(clave);
-        
-        registrar(a);
-
+        boolean ok=registrar(usuario, marca, modelo, placa, asientos);
+        System.out.println(ok);
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            out.print("ok");
-
+            out.print(ok);
         }
     }
 
     public void getConnection() {
         client = new MongoClient(clientURI);
         database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("usuarios");
-
+        col = database.getCollection("autos");
     }
 
-    public void registrar(Alumno a) {
+    public boolean registrar(String usuario, String marca, String modelo, String placa, int asientos) {
         getConnection();
+        boolean ok=false;
         int id;
         try {
             Document doc = col.find().sort(Sorts.orderBy(Sorts.descending("_id"))).first();
@@ -78,20 +66,21 @@ public class Registro extends HttpServlet {
         } catch (Exception e) {
             id = 0;
         }
+        try {
+            Document doc1 = new Document();
+            doc1.append("_id", id + 1);
+            doc1.append("idUsuario", usuario);
+            doc1.append("marca", marca);
+            doc1.append("modelo", modelo);
+            doc1.append("placa", placa);
+            doc1.append("asientos", asientos);
 
-        Document doc1 = new Document();
-        doc1.append("_id", id + 1);
-        doc1.append("nombre", a.getNombres());
-        doc1.append("edad", a.getEdad());
-        doc1.append("sexo", a.getSexo());
-        doc1.append("carrera", a.getCarrera());
-        doc1.append("ciclo", a.getCiclo());
-        doc1.append("clave", a.getClave());
-        doc1.append("correo", a.getCorreo());
-        doc1.append("userFbId", "");
-        doc1.append("comun", 0);
-
-        col.insertOne(doc1);
+            col.insertOne(doc1);
+            ok=true;
+        }catch(Exception e){
+            ok=false;
+        }
+        return ok;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -106,11 +95,7 @@ public class Registro extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (Exception ex) {
-            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**
@@ -124,11 +109,7 @@ public class Registro extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (Exception ex) {
-            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        processRequest(request, response);
     }
 
     /**

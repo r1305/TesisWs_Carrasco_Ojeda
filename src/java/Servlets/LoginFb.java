@@ -30,7 +30,8 @@ public class LoginFb extends HttpServlet {
         response.setContentType("application/json");
         String fbId=request.getParameter("fb");
         String correo=request.getParameter("correo");
-        String ok=update(fbId, correo);
+        int comun=Integer.parseInt(request.getParameter("comun"));
+        String ok=update(fbId, correo,comun);
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
             out.println(ok);
@@ -45,13 +46,17 @@ public class LoginFb extends HttpServlet {
 
     }
 
-    public String update(String fbId, String id) {
+    public String update(String fbId, String id,int comun) {
         getConnection();
         String rpta="";
         try {
             Document doc = col.find(eq("correo", id)).first();
 
             col.updateOne(doc, new Document("$set", new Document("userFbId", fbId)));
+            
+            Document doc1 = col.find(eq("correo", id)).first();
+
+            col.updateOne(doc1, new Document("$set", new Document("comun", comun)));
             rpta="ok";
         } catch (Exception e) {
             System.out.println(e);
