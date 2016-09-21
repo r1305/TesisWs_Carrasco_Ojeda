@@ -31,10 +31,14 @@ public class LoginFb extends HttpServlet {
         String fbId=request.getParameter("fb");
         String correo=request.getParameter("correo");
         int comun=Integer.parseInt(request.getParameter("comun"));
-        String ok=update(fbId, correo,comun);
+        String foto=request.getParameter("foto");
+        String ok=update(correo, comun, foto, fbId);
+
+        
+        
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            out.println(ok);
+            out.print(ok);            
 
         }
     }
@@ -45,26 +49,63 @@ public class LoginFb extends HttpServlet {
         col = database.getCollection("usuarios");
 
     }
-
-    public String update(String fbId, String id,int comun) {
-        getConnection();
+    public String update(String id,int comun,String foto,String fb){
         String rpta="";
-        try {
-            Document doc = col.find(eq("correo", id)).first();
-
-            col.updateOne(doc, new Document("$set", new Document("userFbId", fbId)));
-            
-            Document doc1 = col.find(eq("correo", id)).first();
-
-            col.updateOne(doc1, new Document("$set", new Document("comun", comun)));
+        try{
+            getConnection();
+            updateComun(id, comun);
+            updateFbId(id, fb);
+            updateFoto(id, foto);
             rpta="ok";
-        } catch (Exception e) {
-            System.out.println(e);
+        }catch(Exception e){
             rpta="fail";
-            
         }
         return rpta;
     }
+
+    public String updateComun(String id,int comun) {
+        
+        String rpta="";
+        try {
+            Document doc = col.find(eq("correo", id)).first();        
+            col.updateOne(doc, new Document("$set", new Document("comun", comun)));
+            rpta="ok";
+        } catch (Exception e) {
+            System.out.println(e);
+            rpta="fail";           
+        }
+        return rpta;
+    }
+    
+    public String updateFoto(String id,String foto){
+        
+        String rpta="";
+        try {
+            Document doc = col.find(eq("correo", id)).first();
+            col.updateOne(doc, new Document("$set", new Document("foto", foto)));
+            rpta="ok";
+        } catch (Exception e) {
+            System.out.println(e);
+            rpta="fail";            
+        }
+        
+        return rpta;
+    }
+    
+    public String updateFbId(String id,String fb){
+        
+        String rpta="";
+        try {
+            Document doc = col.find(eq("correo", id)).first();
+            col.updateOne(doc, new Document("$set", new Document("userFbId", fb)));
+            rpta="ok";
+        } catch (Exception e) {
+            System.out.println(e);
+            rpta="fail";            
+        }
+        return rpta;
+    }
+    
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**

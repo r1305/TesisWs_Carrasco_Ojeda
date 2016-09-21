@@ -34,7 +34,7 @@ public class GetDatos extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String id=request.getParameter("id");
+        String id=request.getParameter("correo");
         String ob=getDatos(id);
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
@@ -54,12 +54,14 @@ public class GetDatos extends HttpServlet {
         getConnection();
         String data="";
         try {
-            Document doc = col.find(eq("userFbId",id)).first();
+            Document doc = col.find(eq("correo",id)).first();
             JSONObject o=new JSONObject();
+            o.put("nombre",doc.getString("nombre"));
             o.put("carrera", doc.getString("carrera"));
             o.put("sexo",doc.getString("sexo"));
             o.put("ciclo",doc.getInteger("ciclo"));
             o.put("edad",doc.getInteger("edad"));
+            o.put("foto",doc.getString("foto"));
             
             data=o.toString();
             

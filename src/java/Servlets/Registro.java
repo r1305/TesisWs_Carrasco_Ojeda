@@ -35,7 +35,7 @@ public class Registro extends HttpServlet {
         AES aes=new AES();
         
         String nombre = aes.encrypt(request.getParameter("nombre"));
-        String correo = aes.encrypt(request.getParameter("correo"));
+        String correo = request.getParameter("correo");
         int ciclo = Integer.parseInt(request.getParameter("ciclo"));
         String sexo = aes.encrypt(request.getParameter("sexo"));
         int edad =Integer.parseInt(request.getParameter("edad"));

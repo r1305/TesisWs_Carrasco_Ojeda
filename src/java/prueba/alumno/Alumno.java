@@ -10,19 +10,18 @@ package prueba.alumno;
  * @author usuario
  */
 public class Alumno {
-    String nombres, apellidos, carrera, facultad, sexo,correo,clave,userFbId;
+    String nombres, apellidos, carrera, facultad, sexo,correo,clave,userFbId,foto;   
     int edad,ciclo;
 
     public Alumno() {
     }
+    
+    public String getFoto() {
+        return foto;
+    }
 
-    public Alumno(String nombres, String apellidos, String carrera, String sexo, int edad, int ciclo) {
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.carrera = carrera;
-        this.sexo = sexo;
-        this.edad = edad;
-        this.ciclo = ciclo;
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 
     public String getUserFbId() {
