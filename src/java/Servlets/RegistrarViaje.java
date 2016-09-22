@@ -9,6 +9,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import static com.mongodb.client.model.Filters.eq;
 import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -43,8 +45,11 @@ public class RegistrarViaje extends HttpServlet {
         
         String destino=request.getParameter("destino");
         String user=request.getParameter("usuario");
+        System.out.println(request.getParameter("asientos"));
         int asientos=Integer.parseInt(request.getParameter("asientos"));
-        boolean ok=registrar(user, destino, asientos);
+        
+        int carro=getDatosCarro(user);
+        boolean ok=registrar(user, destino, asientos,carro);
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
@@ -59,7 +64,7 @@ public class RegistrarViaje extends HttpServlet {
         col = database.getCollection("viajes");
     }
 
-    public boolean registrar(String usuario, String destino, int asientos) {
+    public boolean registrar(String usuario, String destino, int asientos,int carro) {
         getConnection();
         boolean ok=false;
         int id;
@@ -75,13 +80,30 @@ public class RegistrarViaje extends HttpServlet {
             doc1.append("idUsuario", usuario);
             doc1.append("destino", destino);
             doc1.append("asientos", asientos);
-
+            doc1.append("idCarro",carro);
             col.insertOne(doc1);
             ok=true;
         }catch(Exception e){
             ok=false;
         }
         return ok;
+    }
+    
+    public int getDatosCarro(String id) {
+        client = new MongoClient(clientURI);
+        database = client.getDatabase("tesis_ojeda_carrasco");
+        col = database.getCollection("autos");
+        
+        int data=0;
+        try {
+            Document doc = col.find(eq("idUsuario",id)).first();
+            JSONObject o=new JSONObject();
+            data=doc.getInteger("_id");                        
+        } catch (NullPointerException e) {
+            data=0;
+        }
+        return data;
+
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

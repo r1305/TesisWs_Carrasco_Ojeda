@@ -10,8 +10,11 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import static com.mongodb.client.model.Filters.eq;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 /**
  *
@@ -36,9 +40,19 @@ public class ListarViajes extends HttpServlet {
         
         String lista=listar();
         response.setContentType("application/json");
+        
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
+            //out.print(lista);
+            //JSONParser p=new JSONParser();
+            //JSONObject o=(JSONObject)p.parse(lista);
+            //JSONArray rawName=(JSONArray)o.get("viajes");
+            /*for(int i=0;i<lista.size();i++){
+                out.println(lista.get(i));
+            }*/
             out.print(lista);            
+        }catch(Exception e){
+            System.out.println(e);
         }
     }
     
@@ -51,24 +65,46 @@ public class ListarViajes extends HttpServlet {
     public String listar() {
         getConnection();
         String id;
+        List<JSONObject> l=new ArrayList<>();
         MongoCursor<Document> cursor=col.find().iterator();
         Document doc;
-        JSONObject o=new JSONObject();
+        JSONObject ob=new JSONObject();
+        
         JSONArray ja=new JSONArray();
         try {
             while (cursor.hasNext()) {
                 doc = cursor.next();
-                String nombre = doc.getString("destino");
-                ja.add(nombre);
+                JSONObject o=new JSONObject();
+                o.put("nombre",doc.getString("destino"));
+                o.put("asientos",doc.getInteger("asientos"));
+                o.put("destino",doc.getString("destino"));
+                o.put("placa",getPlaca(doc.getInteger("idCarro")));
+                //String nombre = doc.getString("destino");
+                ja.add(o);
             }
-            o.put("viajes", ja);
+            ob.put("viajes", ja);
         } catch (Exception e) {
             System.out.println(e);
         } finally {
             cursor.close();
         }
-        return o.toString();
+        return ob.toString();
 
+    }
+    
+    public String getPlaca(int idCarro){
+        String placa="";
+        col = database.getCollection("autos");
+        
+        try {
+            Document doc = col.find(eq("_id",idCarro)).first();            
+            placa=doc.getString("placa");
+            
+        } catch (NullPointerException e) {
+            placa="error";
+        }
+        
+        return placa;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
