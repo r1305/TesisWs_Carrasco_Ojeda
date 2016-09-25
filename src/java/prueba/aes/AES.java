@@ -31,7 +31,7 @@ public class AES {
         //SecureRandom random = new SecureRandom();
         //random.nextBytes(iv);
         //IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-        byte[] iv = new byte[16];
+        byte[] iv = new byte[32];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
         IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);

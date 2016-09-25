@@ -75,6 +75,7 @@ public class ListarViajes extends HttpServlet {
             while (cursor.hasNext()) {
                 doc = cursor.next();
                 JSONObject o=new JSONObject();
+                o.put("user",doc.getString("idUsuario"));
                 o.put("nombre",doc.getString("destino"));
                 o.put("asientos",doc.getInteger("asientos"));
                 o.put("destino",doc.getString("destino"));

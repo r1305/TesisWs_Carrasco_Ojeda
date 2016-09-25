@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
 import org.json.simple.JSONObject;
+import prueba.aes.AES;
 
 /**
  *
@@ -55,17 +56,21 @@ public class GetDatos extends HttpServlet {
         String data="";
         try {
             Document doc = col.find(eq("correo",id)).first();
+            AES a=new AES();
             JSONObject o=new JSONObject();
-            o.put("nombre",doc.getString("nombre"));
-            o.put("carrera", doc.getString("carrera"));
-            o.put("sexo",doc.getString("sexo"));
+            o.put("nombre",doc.get("nombre"));
+            System.out.println(doc.get("nombre"));
+            //System.out.println(doc.get("nombre").substring(0, doc.getString("nombre").length()-2));
+            o.put("carrera",doc.get("carrera"));
+            o.put("sexo",doc.get("sexo"));
             o.put("ciclo",doc.getInteger("ciclo"));
             o.put("edad",doc.getInteger("edad"));
             o.put("foto",doc.getString("foto"));
             
             data=o.toString();
             
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
+            System.out.println(e);
             data="error";
         }
         return data;

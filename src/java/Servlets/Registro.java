@@ -34,13 +34,13 @@ public class Registro extends HttpServlet {
 
         AES aes=new AES();
         
-        String nombre = aes.encrypt(request.getParameter("nombre"));
+        String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
         int ciclo = Integer.parseInt(request.getParameter("ciclo"));
-        String sexo = aes.encrypt(request.getParameter("sexo"));
+        String sexo = request.getParameter("sexo");
         int edad =Integer.parseInt(request.getParameter("edad"));
-        String carrera = aes.encrypt(request.getParameter("carrera"));
-        String clave=aes.encrypt(request.getParameter("clave"));
+        String carrera = request.getParameter("carrera");
+        String clave=request.getParameter("clave");
         
 
         Alumno a = new Alumno();
