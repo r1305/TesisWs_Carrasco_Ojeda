@@ -47,9 +47,10 @@ public class RegistrarViaje extends HttpServlet {
         String user=request.getParameter("usuario");
         System.out.println(request.getParameter("asientos"));
         int asientos=Integer.parseInt(request.getParameter("asientos"));
+        int km=Integer.parseInt(request.getParameter("km"));
         
         int carro=getDatosCarro(user);
-        boolean ok=registrar(user, destino, asientos,carro);
+        boolean ok=registrar(km,user, destino, asientos,carro);
         response.setContentType("application/json");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
@@ -64,7 +65,7 @@ public class RegistrarViaje extends HttpServlet {
         col = database.getCollection("viajes");
     }
 
-    public boolean registrar(String usuario, String destino, int asientos,int carro) {
+    public boolean registrar(int km,String usuario, String destino, int asientos,int carro) {
         getConnection();
         boolean ok=false;
         int id;
@@ -81,6 +82,7 @@ public class RegistrarViaje extends HttpServlet {
             doc1.append("destino", destino);
             doc1.append("asientos", asientos);
             doc1.append("idCarro",carro);
+            doc1.append("distancia",km);
             col.insertOne(doc1);
             ok=true;
         }catch(Exception e){
