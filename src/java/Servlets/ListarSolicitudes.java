@@ -8,107 +8,81 @@ package Servlets;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
-import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
  *
  * @author Julian
  */
-public class RegistrarViaje extends HttpServlet {
+public class ListarSolicitudes extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     private MongoClient client;
     private final MongoClientURI clientURI = new MongoClientURI("mongodb://root:root@ds147995.mlab.com:47995/tesis_ojeda_carrasco");
     private MongoDatabase database;
     private MongoCollection<Document> col;
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String destino=request.getParameter("destino");
-        String user=request.getParameter("usuario");
-        //System.out.println(request.getParameter("asientos"));
-        int asientos=Integer.parseInt(request.getParameter("asientos"));
-        float km=Float.parseFloat(request.getParameter("km"));
-        String enc=request.getParameter("encuentro");
-        int min=Integer.parseInt(request.getParameter("espera"));
-        
-        int carro=getDatosCarro(user);
-        boolean ok=registrar(km,user, destino, asientos,carro,enc,min);
+        String user=request.getParameter("user");
+        String lista=listar(user);
         response.setContentType("application/json");
+        
         try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.print(ok);
 
+            out.print(lista);            
+        }catch(Exception e){
+            System.out.println(e);
         }
     }
     
     public void getConnection() {
         client = new MongoClient(clientURI);
         database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("viajes");
-    }
-
-    public boolean registrar(float km,String usuario, String destino, int asientos,int carro,String esp,int min) {
-        getConnection();
-        boolean ok=false;
-        int id;
-        try {
-            Document doc = col.find().sort(Sorts.orderBy(Sorts.descending("_id"))).first();
-            id = doc.getInteger("_id");
-        } catch (Exception e) {
-            id = 0;
-        }
-        try {
-            Document doc1 = new Document();
-            doc1.append("_id", id + 1);
-            doc1.append("idUsuario", usuario);
-            doc1.append("destino", destino);
-            doc1.append("asientos", asientos);
-            doc1.append("idCarro",carro);
-            doc1.append("distancia",km);
-            doc1.append("encuentro",esp);
-            doc1.append("espera", min);
-            col.insertOne(doc1);
-            ok=true;
-        }catch(Exception e){
-            ok=false;
-        }
-        return ok;
+        col = database.getCollection("solicitudes");
     }
     
-    public int getDatosCarro(String id) {
-        client = new MongoClient(clientURI);
-        database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("autos");
+    public String listar(String usuario) {
+        getConnection();
+        String id;
+        List<JSONObject> l=new ArrayList<>();
+        MongoCursor<Document> cursor=col.find(eq("idChofer",usuario)).iterator();
+        Document doc;
+        JSONObject ob=new JSONObject();
         
-        int data=0;
+        JSONArray ja=new JSONArray();
         try {
-            Document doc = col.find(eq("idUsuario",id)).first();
-            JSONObject o=new JSONObject();
-            data=doc.getInteger("_id");                        
-        } catch (NullPointerException e) {
-            data=0;
+            while (cursor.hasNext()) {
+                doc = cursor.next();
+                JSONObject o=new JSONObject();                
+                o.put("_id",doc.getInteger("_id"));
+                o.put("idUsuario",doc.getString("idUsuario"));
+                o.put("idChofer",doc.getString("idChofer"));
+                o.put("idViaje",doc.getInteger("idViaje"));
+                o.put("estado",doc.getString("estado"));
+                //String nombre = doc.getString("destino");
+                ja.add(o);
+            }
+            ob.put("solicitudes", ja);
+        } catch (Exception e) {
+            System.out.println(e);
+        } finally {
+            cursor.close();
         }
-        return data;
+        return ob.toString();
 
     }
 

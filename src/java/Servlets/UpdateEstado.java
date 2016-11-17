@@ -17,65 +17,50 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
-import org.json.simple.JSONObject;
-import prueba.aes.AES;
 
 /**
  *
  * @author Julian
  */
-public class GetDatos extends HttpServlet {
+public class UpdateEstado extends HttpServlet {
 
     private MongoClient client;
     private final MongoClientURI clientURI = new MongoClientURI("mongodb://root:root@ds147995.mlab.com:47995/tesis_ojeda_carrasco");
     private MongoDatabase database;
     private MongoCollection<Document> col;
     
-    
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String id=request.getParameter("correo");
-        String ob=getDatos(id);
-        response.setContentType("application/json");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.print(ob);
-            
-        }
-    }
-    
     public void getConnection() {
         client = new MongoClient(clientURI);
         database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("usuarios");
+        col = database.getCollection("solicitudes");                
     }
-
-    public String getDatos(String id) {
-        getConnection();
-        String data="";
+    
+    public String updateEstado(int id,String estado) {
+        
+        String rpta="";
         try {
-            Document doc = col.find(eq("correo",id)).first();
-            AES a=new AES();
-            JSONObject o=new JSONObject();
-            o.put("nombre",doc.get("nombre"));
-            System.out.println(doc.get("nombre"));
-            //System.out.println(doc.get("nombre").substring(0, doc.getString("nombre").length()-2));
-            o.put("carrera",doc.get("carrera"));
-            o.put("sexo",doc.get("sexo"));
-            o.put("ciclo",doc.getInteger("ciclo"));
-            o.put("edad",doc.getInteger("edad"));
-            o.put("foto",doc.getString("foto"));
-            o.put("comun",doc.getInteger("comun"));
-            
-            data=o.toString();
-            
+            getConnection();
+            Document doc = col.find(eq("_id", id)).first();        
+            col.updateOne(doc, new Document("$set", new Document("estado", estado)));
+            rpta="ok";
         } catch (Exception e) {
             System.out.println(e);
-            data="error";
+            rpta="fail";           
         }
-        return data;
-
+        return rpta;
+    }
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String estado=request.getParameter("estado");
+        int _id=Integer.parseInt(request.getParameter("id"));
+        String rpta=updateEstado(_id, estado);
+        
+        response.setContentType("text/html;charset=UTF-8");
+        try (PrintWriter out = response.getWriter()) {
+            /* TODO output your page here. You may use following sample code. */
+            out.print(rpta);            
+        }
+        
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

@@ -9,7 +9,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import static com.mongodb.client.model.Filters.eq;
 import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,58 +17,47 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
-import org.json.simple.JSONObject;
 
 /**
  *
  * @author Julian
  */
-public class RegistrarViaje extends HttpServlet {
+public class RegistrarNotificacion extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     private MongoClient client;
     private final MongoClientURI clientURI = new MongoClientURI("mongodb://root:root@ds147995.mlab.com:47995/tesis_ojeda_carrasco");
     private MongoDatabase database;
     private MongoCollection<Document> col;
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        String destino=request.getParameter("destino");
-        String user=request.getParameter("usuario");
-        //System.out.println(request.getParameter("asientos"));
-        int asientos=Integer.parseInt(request.getParameter("asientos"));
-        float km=Float.parseFloat(request.getParameter("km"));
-        String enc=request.getParameter("encuentro");
-        int min=Integer.parseInt(request.getParameter("espera"));
-        
-        int carro=getDatosCarro(user);
-        boolean ok=registrar(km,user, destino, asientos,carro,enc,min);
-        response.setContentType("application/json");
+        String user = request.getParameter("user");
+        String user2 = request.getParameter("user2");
+        String idCarrera = request.getParameter("idCarrera");
+        int idV = Integer.parseInt(idCarrera);
+
+        boolean ok = registrar(user, user2, idV);
+
+        response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            out.print(ok);
-
+            if (ok) {
+                out.print("ok");
+            }else{
+                out.print("fail");
+            }
         }
     }
-    
+
     public void getConnection() {
         client = new MongoClient(clientURI);
         database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("viajes");
+        col = database.getCollection("solicitudes");
     }
 
-    public boolean registrar(float km,String usuario, String destino, int asientos,int carro,String esp,int min) {
+    public boolean registrar(String u1, String u2, int idS) {
         getConnection();
-        boolean ok=false;
+        boolean ok = false;
         int id;
         try {
             Document doc = col.find().sort(Sorts.orderBy(Sorts.descending("_id"))).first();
@@ -80,36 +68,16 @@ public class RegistrarViaje extends HttpServlet {
         try {
             Document doc1 = new Document();
             doc1.append("_id", id + 1);
-            doc1.append("idUsuario", usuario);
-            doc1.append("destino", destino);
-            doc1.append("asientos", asientos);
-            doc1.append("idCarro",carro);
-            doc1.append("distancia",km);
-            doc1.append("encuentro",esp);
-            doc1.append("espera", min);
+            doc1.append("idUsuario", u1);
+            doc1.append("idChofer", u2);
+            doc1.append("idViaje", idS);
+            doc1.append("estado", "pendiente");
             col.insertOne(doc1);
-            ok=true;
-        }catch(Exception e){
-            ok=false;
+            ok = true;
+        } catch (Exception e) {
+            ok = false;
         }
         return ok;
-    }
-    
-    public int getDatosCarro(String id) {
-        client = new MongoClient(clientURI);
-        database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("autos");
-        
-        int data=0;
-        try {
-            Document doc = col.find(eq("idUsuario",id)).first();
-            JSONObject o=new JSONObject();
-            data=doc.getInteger("_id");                        
-        } catch (NullPointerException e) {
-            data=0;
-        }
-        return data;
-
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

@@ -64,7 +64,6 @@ public class ListarViajes extends HttpServlet {
     
     public String listar() {
         getConnection();
-        String id;
         List<JSONObject> l=new ArrayList<>();
         MongoCursor<Document> cursor=col.find().iterator();
         Document doc;
@@ -74,12 +73,15 @@ public class ListarViajes extends HttpServlet {
         try {
             while (cursor.hasNext()) {
                 doc = cursor.next();
-                JSONObject o=new JSONObject();
+                JSONObject o=new JSONObject();                
+                o.put("idViaje",doc.getInteger("_id"));
                 o.put("user",doc.getString("idUsuario"));
                 o.put("nombre",doc.getString("destino"));
                 o.put("asientos",doc.getInteger("asientos"));
                 o.put("destino",doc.getString("destino"));
                 o.put("placa",getPlaca(doc.getInteger("idCarro")));
+                o.put("espera",doc.getInteger("espera"));
+                o.put("encuentro",doc.getString("encuentro"));
                 //String nombre = doc.getString("destino");
                 ja.add(o);
             }
