@@ -8,107 +8,92 @@ package Servlets;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.Document;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 /**
  *
- * @author Julian
+ * @author RJA
  */
-public class ListarViajes extends HttpServlet {
+public class ValidarClave extends HttpServlet {
 
     private MongoClient client;
     private final MongoClientURI clientURI = new MongoClientURI("mongodb://root:root@ds147995.mlab.com:47995/tesis_ojeda_carrasco");
     private MongoDatabase database;
     private MongoCollection<Document> col;
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        String lista=listar();
-        response.setContentType("application/json");
-        
+        String clave = request.getParameter("clave");
+        String correo = request.getParameter("correo");
+        String ok=validar(correo, clave);
+        response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            //out.print(lista);
-            //JSONParser p=new JSONParser();
-            //JSONObject o=(JSONObject)p.parse(lista);
-            //JSONArray rawName=(JSONArray)o.get("viajes");
-            /*for(int i=0;i<lista.size();i++){
-                out.println(lista.get(i));
-            }*/
-            out.print(lista);            
-        }catch(Exception e){
-            System.out.println(e);
+            out.print(ok);
+
         }
     }
-    
+
     public void getConnection() {
         client = new MongoClient(clientURI);
         database = client.getDatabase("tesis_ojeda_carrasco");
-        col = database.getCollection("viajes");
+        col = database.getCollection("usuarios");
     }
-    
-    public String listar() {
+
+    public String validar(String correo, String clave) {
         getConnection();
-        List<JSONObject> l=new ArrayList<>();
-        MongoCursor<Document> cursor=col.find().iterator();
-        Document doc;
-        JSONObject ob=new JSONObject();
-        
-        JSONArray ja=new JSONArray();
+        String co = "";
+        String rpta = "";
+
         try {
-            while (cursor.hasNext()) {
-                doc = cursor.next();
-                JSONObject o=new JSONObject();                
-                o.put("idViaje",doc.getInteger("_id"));
-                o.put("user",doc.getString("idUsuario"));
-                o.put("nombre",doc.getString("destino"));
-                o.put("asientos",doc.getInteger("asientos"));
-                o.put("destino",doc.getString("destino"));
-                o.put("placa",getPlaca(doc.getInteger("idCarro")));
-                o.put("espera",doc.getInteger("espera"));
-                o.put("encuentro",doc.getString("encuentro"));
-                o.put("clave",doc.getString("clave"));
-                //String nombre = doc.getString("destino");
-                ja.add(o);
+            Document doc = col.find(eq("correo", correo)).first();
+            co = doc.getString("clave");
+            if (co.equalsIgnoreCase(md5(clave))) {
+                //mandara a la pantalla inicial
+                rpta = "ok";
+            }else{
+                rpta="error";
             }
-            ob.put("viajes", ja);
-        } catch (Exception e) {
-            System.out.println(e);
-        } finally {
-            cursor.close();
+        } catch (NullPointerException e) {
+            //mandara al registro
+            rpta = "error";
         }
-        return ob.toString();
+
+        return rpta;
 
     }
-    
-    public String getPlaca(int idCarro){
-        String placa="";
-        col = database.getCollection("autos");
-        
+
+    public String md5(String s) {
+        String rpta="";
         try {
-            Document doc = col.find(eq("_id",idCarro)).first();            
-            placa=doc.getString("placa");
-            
-        } catch (NullPointerException e) {
-            placa="error";
+            // Create MD5 Hash
+            MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+            digest.update(s.getBytes());
+            byte messageDigest[] = digest.digest();
+
+            // Create Hex String
+            StringBuffer hexString = new StringBuffer();
+            for (int i = 0; i < messageDigest.length; i++) {
+                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+            }
+            rpta= hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            rpta="error";
         }
-        
-        return placa;
+        System.out.println("md5: "+rpta);
+        return rpta;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

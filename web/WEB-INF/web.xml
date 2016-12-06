@@ -52,6 +52,10 @@
         <servlet-name>UpdateEstado</servlet-name>
         <servlet-class>Servlets.UpdateEstado</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ValidarClave</servlet-name>
+        <servlet-class>Servlets.ValidarClave</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Login</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -103,6 +107,10 @@
     <servlet-mapping>
         <servlet-name>UpdateEstado</servlet-name>
         <url-pattern>/aceptar</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ValidarClave</servlet-name>
+        <url-pattern>/ValidarClave</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

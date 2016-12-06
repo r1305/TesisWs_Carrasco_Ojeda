@@ -12,6 +12,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Sorts;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -32,16 +34,31 @@ public class Registro extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, Exception {
 
-        AES aes=new AES();
-        
+        AES aes = new AES();
+
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
         int ciclo = Integer.parseInt(request.getParameter("ciclo"));
         String sexo = request.getParameter("sexo");
-        int edad =Integer.parseInt(request.getParameter("edad"));
+        int edad = Integer.parseInt(request.getParameter("edad"));
         String carrera = request.getParameter("carrera");
-        String clave=request.getParameter("clave");
-        
+        String clave = request.getParameter("clave");
+        StringBuffer hexString = new StringBuffer();
+        try {
+            // Create MD5 Hash
+            MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+            digest.update(clave.getBytes());
+            byte messageDigest[] = digest.digest();
+
+            // Create Hex String
+            
+            for (int i = 0; i < messageDigest.length; i++) {
+                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+            }
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
         Alumno a = new Alumno();
         a.setNombres(nombre);
@@ -50,8 +67,8 @@ public class Registro extends HttpServlet {
         a.setSexo(sexo);
         a.setEdad(edad);
         a.setCarrera(carrera);
-        a.setClave(clave);
-        
+        a.setClave(hexString.toString());
+
         registrar(a);
 
         response.setContentType("application/json");
